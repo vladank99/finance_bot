@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import gspread
 from gspread.utils import rowcol_to_a1  # только rowcol_to_a1
 from google.oauth2.service_account import Credentials
+import json
 from googleapiclient.discovery import build
 
 from telegram import (
@@ -51,9 +52,19 @@ SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
-creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPES)
+service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+
+if service_account_json:
+    # прод: берём JSON из переменной окружения (Render)
+    info = json.loads(service_account_json)
+    creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+else:
+    # локально: читаем файл
+    creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPES)
+
 gc = gspread.authorize(creds)
 sheets_service = build("sheets", "v4", credentials=creds)
+
 
 # ================== UI CONSTS ==================
 ADD_AMOUNT, ADD_DESC = range(2)
